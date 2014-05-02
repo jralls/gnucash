@@ -8,6 +8,13 @@ include $(top_srcdir)/test-templates/Makefile.decl
 #after $(top_srcdir) or $(top_builddir):
 MODULEPATH = src/libqof/qof
 
+AM_CPPFLAGS= \
+	-I$(top_srcdir)/lib/libc \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/src/test-core \
+	-I$(top_srcdir)/src/libqof/qof \
+	$(GLIB_CFLAGS)
+
 test_qof_SOURCES = \
 	test-gnc-date.c \
 	test-qof.c \
@@ -17,6 +24,7 @@ test_qof_SOURCES = \
 	test-qofobject.c \
 	test-qofsession.c \
 	test-qof-string-cache.c \
+	test-gnc-guid.cpp \
 	${top_srcdir}/src/test-core/unittest-support.c
 
 test_qof_HEADERS = \
