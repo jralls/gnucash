@@ -8,6 +8,7 @@
 *.pyo
 *.schemas
 *~
+*.swp
 .cproject
 .deps
 .libs
