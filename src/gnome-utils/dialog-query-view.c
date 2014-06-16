@@ -71,7 +71,7 @@ dqv_build_booklist (DialogQueryView *dqv, Query *q)
     for (node = qof_query_get_books(q); node; node = node->next)
     {
         QofBook *book = node->data;
-        GncGUID *guid = guid_malloc();
+        GncGUID *guid = guid_new_ptr_return();
         *guid = *(qof_book_get_guid(book));
         dqv->books = g_list_prepend(dqv->books, guid);
     }

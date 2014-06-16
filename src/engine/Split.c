@@ -1450,8 +1450,9 @@ xaccSplitConvertAmount (const Split *split, const Account * account)
                 xaccAccountGetCommodity(xaccSplitGetAccount(osplit));
             if (!gnc_commodity_equal(to_commodity, split_comm))
             {
+                gchar * guidstr = guid_to_string(xaccSplitGetGUID(osplit));
                 PERR("The split's (%s) amount can't be converted from %s into %s.",
-                     guid_to_string(xaccSplitGetGUID(osplit)),
+                    guidstr,
                      gnc_commodity_get_mnemonic(split_comm),
                      gnc_commodity_get_mnemonic(to_commodity)
                     );

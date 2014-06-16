@@ -266,9 +266,10 @@ GncBillTerm * gncBillTermCreate (QofBook *book)
 
 void gncBillTermDestroy (GncBillTerm *term)
 {
+    gchar *guidstr = guid_to_string(qof_instance_get_guid(&term->inst));
     if (!term) return;
-    DEBUG("destroying bill term %s (%p)",
-          guid_to_string(qof_instance_get_guid(&term->inst)), term);
+    DEBUG("destroying bill term %s (%p)", guidstr, term);
+    g_free(guidstr);
     qof_instance_set_destroying(term, TRUE);
     qof_instance_set_dirty (&term->inst);
     gncBillTermCommitEdit (term);

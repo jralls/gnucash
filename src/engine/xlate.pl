@@ -191,7 +191,7 @@ foreach (@files)
 		s/gncQueryObjectDefaultSort/qof_class_get_default_sort/g;
 
 		s/xaccGUIDNULL/guid_null/g;
-		s/xaccGUIDMalloc/guid_malloc/g;
+		s/xaccGUIDMalloc/guid_new_ptr_return/g;
 		s/xaccGUIDFree/guid_free/g;
 
 		s/GNCIdTypeConst/QofIdTypeConst/g;

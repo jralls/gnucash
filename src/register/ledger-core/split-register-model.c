@@ -2075,7 +2075,7 @@ gnc_split_register_guid_malloc (void)
 {
     GncGUID *guid;
 
-    guid = guid_malloc ();
+    guid = guid_new_ptr_return ();
 
     *guid = *guid_null ();
 

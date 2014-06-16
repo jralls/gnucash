@@ -617,7 +617,7 @@ gnc_scm2guid_glist (SCM guids_scm)
 
         if (guid_scm != SCM_BOOL_F)
         {
-            guid = guid_malloc ();
+            guid = guid_new_ptr_return ();
             *guid = gnc_scm2guid (guid_scm);
         }
 

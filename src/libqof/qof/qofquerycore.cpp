@@ -745,7 +745,7 @@ qof_query_guid_predicate (QofGuidMatch options, GList *guid_list)
     pdata->guids = g_list_copy (guid_list);
     for (node = pdata->guids; node; node = node->next)
     {
-        GncGUID *guid = guid_malloc ();
+        GncGUID *guid = guid_new_ptr_return ();
         *guid = *((GncGUID *)node->data);
         node->data = guid;
     }
@@ -1682,7 +1682,7 @@ qof_query_choice_predicate (QofGuidMatch options, GList *guid_list)
     pdata->guids = g_list_copy (guid_list);
     for (node = pdata->guids; node; node = node->next)
     {
-        GncGUID *guid = guid_malloc ();
+        GncGUID *guid = guid_new_ptr_return ();
         *guid = *((GncGUID *)node->data);
         node->data = guid;
     }

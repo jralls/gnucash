@@ -160,7 +160,7 @@ update_report_list(GtkListStore *store, CustomReportDialog *crd)
         	 in the gtkliststore */
         for (i = 0; !scm_is_null(rpt_guids); i++)
         {
-            GncGUID *guid = guid_malloc ();
+            GncGUID *guid = guid_new_ptr_return ();
             gchar *guid_str = scm_to_utf8_string (SCM_CAR(rpt_guids));
             gchar *name = gnc_scm_to_utf8_string (scm_call_2(template_menu_name, SCM_CAR(rpt_guids), SCM_BOOL_F));
 
@@ -341,7 +341,7 @@ get_custom_report_selection(CustomReportDialog *crd,
     GtkTreeSelection *sel;
     GtkTreeModel *model;
     GtkTreeIter iter;
-    GncGUID *guid = guid_malloc ();
+    GncGUID *guid = guid_new_ptr_return ();
     gchar *guid_str;
 
     sel = gtk_tree_view_get_selection(GTK_TREE_VIEW(crd->reportview));
@@ -382,7 +382,7 @@ custom_report_list_view_row_activated_cb(GtkTreeView *view, GtkTreePath *path,
 
     if (gtk_tree_model_get_iter(model, &iter, path))
     {
-        GncGUID *guid = guid_malloc ();
+        GncGUID *guid = guid_new_ptr_return ();
         gchar *guid_str;
 
         gtk_tree_model_get(model, &iter, COL_NUM, &guid, -1);
@@ -565,7 +565,7 @@ void gnc_ui_custom_report_edit_name (GncMainWindow * window, SCM scm_guid)
     if (scm_is_false (scm_call_1 (is_custom_report, scm_guid)))
         return;
 
-    guid = guid_malloc ();
+    guid = guid_new_ptr_return ();
     guid_str = scm_to_utf8_string (scm_guid);
     if (!string_to_guid (guid_str, guid))
         goto cleanup;

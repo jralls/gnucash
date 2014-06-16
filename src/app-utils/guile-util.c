@@ -297,7 +297,7 @@ gnc_is_trans_scm(SCM scm)
 void
 gnc_split_scm_set_account(SCM split_scm, Account *account)
 {
-    const char *guid_string;
+    char *guid_string;
     SCM arg;
 
     initialize_scm_functions();
@@ -314,6 +314,8 @@ gnc_split_scm_set_account(SCM split_scm, Account *account)
     arg = scm_from_utf8_string(guid_string);
 
     scm_call_2(setters.split_scm_account_guid, split_scm, arg);
+
+    g_free(guid_string);
 }
 
 
@@ -611,6 +613,7 @@ gnc_copy_trans_scm_onto_trans_swap_accounts(SCM trans_scm,
         QofBook *book)
 {
     static swig_type_info *trans_type = NULL;
+    gchar * guidstr;
     SCM result;
     SCM func;
     SCM arg;
@@ -668,8 +671,12 @@ gnc_copy_trans_scm_onto_trans_swap_accounts(SCM trans_scm,
 
         args = scm_cons(commit, args);
 
-        from = scm_from_utf8_string(guid_to_string(guid_1));
-        to = scm_from_utf8_string(guid_to_string(guid_2));
+        guidstr = guid_to_string(guid_1);
+        from = scm_from_utf8_string(guidstr);
+        g_free(guidstr);
+        guidstr = guid_to_string(guid_2);
+        to = scm_from_utf8_string(guidstr);
+        g_free(guidstr);
 
         map = scm_cons(scm_cons(from, to), map);
         map = scm_cons(scm_cons(to, from), map);

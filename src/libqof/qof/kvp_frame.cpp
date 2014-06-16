@@ -1539,7 +1539,7 @@ kvp_value_to_string(const KvpValue *val)
 {
     gchar *tmp1;
     gchar *tmp2;
-    const gchar *ctmp;
+    gchar guidstr [GUID_ENCODING_LENGTH+1];
 
     g_return_val_if_fail(val, NULL);
 
@@ -1569,8 +1569,8 @@ kvp_value_to_string(const KvpValue *val)
 
     case KVP_TYPE_GUID:
         /* THREAD-UNSAFE */
-        ctmp = guid_to_string(kvp_value_get_guid(val));
-        tmp2 = g_strdup_printf("KVP_VALUE_GUID(%s)", ctmp ? ctmp : "");
+        guid_to_string_buff(kvp_value_get_guid(val), guidstr);
+        tmp2 = g_strdup_printf("KVP_VALUE_GUID(%s)", guidstr);
         return tmp2;
         break;
 

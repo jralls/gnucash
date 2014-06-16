@@ -212,7 +212,7 @@ add_event (ComponentEventInfo *cei, const GncGUID *entity,
         {
             GncGUID *key;
 
-            key = guid_malloc ();
+            key = guid_new_ptr_return ();
             *key = *entity;
 
             ei = g_new (EventInfo, 1);
@@ -260,8 +260,10 @@ gnc_cm_event_handler (QofInstance *entity,
 {
     const GncGUID *guid = qof_entity_get_guid(entity);
 #if CM_DEBUG
+    gchar * str = guid_to_string(guid);
     fprintf (stderr, "event_handler: event %d, entity %p, guid %s\n", event_type,
-             entity, guid_to_string(guid));
+             entity, str);
+    g_free(str);
 #endif
     add_event (&changes, guid, event_type, TRUE);
 
