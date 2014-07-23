@@ -380,6 +380,7 @@ xaccSchedXactionInit(SchedXaction *sx, QofBook *book)
 {
     Account        *ra;
     const GncGUID *guid;
+    gchar       guidstr[GUID_ENCODING_LENGTH+1];
 
     qof_instance_init_data (&sx->inst, GNC_ID_SCHEDXACTION, book);
 
@@ -387,15 +388,18 @@ xaccSchedXactionInit(SchedXaction *sx, QofBook *book)
     sx->template_acct = xaccMallocAccount(book);
     guid = qof_instance_get_guid( sx );
     xaccAccountBeginEdit( sx->template_acct );
-    xaccAccountSetName( sx->template_acct, guid_to_string( guid ));
-    xaccAccountSetCommodity
-    (sx->template_acct,
-     gnc_commodity_table_lookup( gnc_commodity_table_get_table(book),
+
+    guid_to_string_buff(guid, guidstr);
+    xaccAccountSetName( sx->template_acct, guidstr);
+
+    xaccAccountSetCommodity(sx->template_acct,
+    gnc_commodity_table_lookup( gnc_commodity_table_get_table(book),
                                  "template", "template") );
     xaccAccountSetType( sx->template_acct, ACCT_TYPE_BANK );
     xaccAccountCommitEdit( sx->template_acct );
     ra = gnc_book_get_template_root( book );
     gnc_account_append_child( ra, sx->template_acct );
+
 }
 
 SchedXaction*

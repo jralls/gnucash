@@ -162,7 +162,7 @@ void qof_init (void);
 /** \brief Safely close down the Query Object Framework
 
 Use in place of separate close / shutdown functions
-(like guid_shutdown(), qof_query_shutdown() etc.) to protect
+(like qof_query_shutdown(), etc.) to protect
 against future changes.
 */
 void qof_close (void);

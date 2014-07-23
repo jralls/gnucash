@@ -205,6 +205,7 @@ equals_node_val_vs_splits(xmlNodePtr node, const Transaction *trn)
     xmlNodePtr spl_node;
     Split *spl_mark;
     char *msg;
+    gchar *guidstr;
     int i;
 
     g_return_val_if_fail(node, FALSE);
@@ -217,8 +218,10 @@ equals_node_val_vs_splits(xmlNodePtr node, const Transaction *trn)
         spl_node = find_appropriate_node(node, spl_mark);
 
         if (!spl_node)
-        {
-            g_print( "Split GUID %s", guid_to_string(xaccSplitGetGUID(spl_mark)) );
+        { 
+            guidstr = guid_to_string(xaccSplitGetGUID(spl_mark));
+            g_print( "Split GUID %s",  guidstr);
+            g_free(guidstr);
             return "no matching split found";
         }
 

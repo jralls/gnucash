@@ -675,6 +675,7 @@ GUID.add_method('xaccTransLookup', 'TransLookup')
 GUID.add_method('xaccSplitLookup', 'SplitLookup')
 
 ## define addition methods for GUID object - do we need these
+## The return to guid_to_string must be freed after use
 GUID.add_method('guid_to_string', 'to_string')
 #GUID.add_method('string_to_guid', 'string_to_guid')
 

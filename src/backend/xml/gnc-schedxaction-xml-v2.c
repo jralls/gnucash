@@ -740,7 +740,7 @@ gnc_schedXaction_end_handler(gpointer data_for_children,
     if ( sx->template_acct == NULL )
     {
         Account *ra = NULL;
-        const char *id = NULL;
+        char *id = NULL;
         Account *acct = NULL;
         sixtp_gdv2 *sixdata = gdata->parsedata;
         QofBook *book;
@@ -752,7 +752,6 @@ gnc_schedXaction_end_handler(gpointer data_for_children,
         /* Fix: get account with name of our GncGUID from the template
            accounts.  Make that our template_acct pointer. */
         /* THREAD-UNSAFE */
-        id = guid_to_string( xaccSchedXactionGetGUID( sx ) );
         ra = gnc_book_get_template_root(book);
         if ( ra == NULL )
         {
@@ -760,15 +759,18 @@ gnc_schedXaction_end_handler(gpointer data_for_children,
             xmlFreeNode( tree );
             return FALSE;
         }
+        id = guid_to_string( xaccSchedXactionGetGUID( sx ) );
         acct = gnc_account_lookup_by_name( ra, id );
         if ( acct == NULL )
         {
             g_warning("no template account with name [%s]", id);
             xmlFreeNode( tree );
+            g_free(id);
             return FALSE;
         }
         g_debug("template account name [%s] for SX with GncGUID [%s]",
                 xaccAccountGetName( acct ), id );
+        g_free(id);
 
         /* FIXME: free existing template account.
          *  HUH????? We only execute this if there isn't

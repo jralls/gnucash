@@ -2177,25 +2177,27 @@ gnc_invoice_save_page (InvoiceWindow *iw,
                        GKeyFile *key_file,
                        const gchar *group_name)
 {
+    gchar * guidstr = guid_to_string(&iw->invoice_guid);
     g_key_file_set_string(key_file, group_name, KEY_INVOICE_TYPE,
                           InvoiceDialogTypeasString(iw->dialog_type));
-    g_key_file_set_string(key_file, group_name, KEY_INVOICE_GUID,
-                          guid_to_string(&iw->invoice_guid));
+    g_key_file_set_string(key_file, group_name, KEY_INVOICE_GUID,guidstr);
+    g_free(guidstr);
 
     if (gncOwnerGetJob (&(iw->job)))
     {
         g_key_file_set_string(key_file, group_name, KEY_OWNER_TYPE,
                           qofOwnerGetType(&iw->job));
-        g_key_file_set_string(key_file, group_name, KEY_OWNER_GUID,
-                          guid_to_string(gncOwnerGetGUID(&iw->job)));
+        guidstr = guid_to_string(gncOwnerGetGUID(&iw->job));
+        g_key_file_set_string(key_file, group_name, KEY_OWNER_GUID, guidstr);
     }
     else
     {
         g_key_file_set_string(key_file, group_name, KEY_OWNER_TYPE,
                           qofOwnerGetType(&iw->owner));
-        g_key_file_set_string(key_file, group_name, KEY_OWNER_GUID,
-                          guid_to_string(gncOwnerGetGUID(&iw->owner)));
+        guidstr = guid_to_string(gncOwnerGetGUID(&iw->owner));
+        g_key_file_set_string(key_file, group_name, KEY_OWNER_GUID, guidstr);
     }
+    g_free(guidstr);
 }
 
 GtkWidget *

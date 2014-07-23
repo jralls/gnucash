@@ -71,7 +71,8 @@ gnc_state_set_base (const QofSession *session)
 {
     gchar *basename, *original = NULL, *filename, *file_guid;
     gchar *sf_extension = NULL, *newstyle_filename = NULL;
-    const gchar *uri, *guid_string;
+    const gchar *uri;
+    gchar *guid_string;
     QofBook *book;
     const GncGUID *guid;
     GKeyFile *key_file = NULL;
@@ -192,6 +193,7 @@ gnc_state_set_base (const QofSession *session)
     DEBUG("Clean up");
     g_free(original);
     g_key_file_free (key_file);
+    g_free(guid_string);
 
     LEAVE ();
 }

@@ -1286,8 +1286,7 @@ schedXact_editor_create_ledger( GncSxEditorDialog *sxed )
 
     /* Create the ledger */
     /* THREAD-UNSAFE */
-    sxed->sxGUIDstr = g_strdup( guid_to_string(
-                                    xaccSchedXactionGetGUID(sxed->sx) ) );
+    sxed->sxGUIDstr = guid_to_string( xaccSchedXactionGetGUID(sxed->sx) );
     sxed->ledger = gnc_ledger_display_template_gl( sxed->sxGUIDstr );
     splitreg = gnc_ledger_display_get_split_register( sxed->ledger );
 

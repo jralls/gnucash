@@ -1397,7 +1397,7 @@ gnc_plugin_page_account_tree_cmd_delete_account (GtkAction *action, GncPluginPag
         {
             GList *acct_list, *ptr;
             const GncGUID *guid;
-            const gchar *guid_str;
+            gchar guid_str[GUID_ENCODING_LENGTH+1];
 
             gnc_set_busy_cursor(NULL, TRUE);
             gnc_suspend_gui_refresh ();
@@ -1435,7 +1435,7 @@ gnc_plugin_page_account_tree_cmd_delete_account (GtkAction *action, GncPluginPag
             for (ptr = acct_list; ptr; ptr = g_list_next(ptr))
             {
                 guid = xaccAccountGetGUID (ptr->data);
-                guid_str = guid_to_string (guid);
+                guid_to_string_buff(guid, guid_str);
                 gnc_state_drop_sections_for (guid_str);
             }
             g_list_free(acct_list);
@@ -1443,7 +1443,7 @@ gnc_plugin_page_account_tree_cmd_delete_account (GtkAction *action, GncPluginPag
             /* Drop all references from the state file for this account
              */
             guid = xaccAccountGetGUID (account);
-            guid_str = guid_to_string (guid);
+            guid_to_string_buff(guid, guid_str);
             gnc_state_drop_sections_for (guid_str);
 
             /*

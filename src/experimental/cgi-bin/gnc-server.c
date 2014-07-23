@@ -116,9 +116,11 @@ auth_user (const char * name, const char *passwd)
     if (!name || !passwd) return NULL;
 
     guid = g_new (GncGUID, 1);
-    guid_new (guid);
+    guid_replace (guid);
     logged_in_users = g_list_prepend (logged_in_users, guid);
-    session_auth_string = guid_to_string (guid); /* THREAD UNSAFE */
+
+    /* This should be freed somehow.*/
+    session_auth_string = guid_to_string (guid);
     return session_auth_string;
 }
 

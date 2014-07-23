@@ -570,14 +570,16 @@ taxtable_scrub_entries (QofInstance * entry_p, gpointer ht_p)
     GncEntry *entry = GNC_ENTRY(entry_p);
     GncTaxTable *table, *new_tt;
     gint32 count;
+    gchar *guidstr;
 
     table = gncEntryGetInvTaxTable(entry);
     if (table)
     {
         if (taxtable_is_grandchild(table))
         {
-            PINFO("Fixing i-taxtable on entry %s\n",
-                  guid_to_string(qof_instance_get_guid(QOF_INSTANCE(entry))));
+            guidstr = guid_to_string(qof_instance_get_guid(QOF_INSTANCE(entry)));
+            PINFO("Fixing i-taxtable on entry %s\n", guidstr);
+            g_free(guidstr);
             new_tt = taxtable_find_senior(table);
             gncEntryBeginEdit(entry);
             gncEntrySetInvTaxTable(entry, new_tt);
@@ -597,8 +599,9 @@ taxtable_scrub_entries (QofInstance * entry_p, gpointer ht_p)
     {
         if (taxtable_is_grandchild(table))
         {
-            PINFO("Fixing b-taxtable on entry %s\n",
-                  guid_to_string(qof_instance_get_guid(QOF_INSTANCE(entry))));
+            guidstr = guid_to_string(qof_instance_get_guid(QOF_INSTANCE(entry)));
+            PINFO("Fixing b-taxtable on entry %s\n", guidstr);
+            g_free(guidstr);
             new_tt = taxtable_find_senior(table);
             gncEntryBeginEdit(entry);
             gncEntrySetBillTaxTable(entry, new_tt);
@@ -653,12 +656,14 @@ taxtable_reset_refcount (gpointer key, gpointer value, gpointer notused)
 {
     GncTaxTable *table = key;
     gint32 count = GPOINTER_TO_INT(value);
+    gchar *guidstr;
 
     if (count != gncTaxTableGetRefcount(table) && !gncTaxTableGetInvisible(table))
     {
+        guidstr = guid_to_string(qof_instance_get_guid(QOF_INSTANCE(table)));
         PWARN("Fixing refcount on taxtable %s (%" G_GINT64_FORMAT " -> %d)\n",
-              guid_to_string(qof_instance_get_guid(QOF_INSTANCE(table))),
-              gncTaxTableGetRefcount(table), count);
+            guidstr, gncTaxTableGetRefcount(table), count);
+        g_free(guidstr);
         gncTaxTableSetRefcount(table, count);
     }
 }
@@ -670,6 +675,7 @@ taxtable_scrub (QofBook *book)
     GList *node;
     GncTaxTable *parent, *table;
     GHashTable *ht = g_hash_table_new(g_direct_hash, g_direct_equal);
+    gchar *guidstr;
 
     qof_object_foreach (GNC_ID_ENTRY, book, taxtable_scrub_entries, ht);
     qof_object_foreach (GNC_ID_CUSTOMER, book, taxtable_scrub_cust, ht);
@@ -681,8 +687,9 @@ taxtable_scrub (QofBook *book)
     {
         table = node->data;
 
-        PINFO ("deleting grandchild taxtable: %s\n",
-               guid_to_string(qof_instance_get_guid(QOF_INSTANCE(table))));
+        guidstr = guid_to_string(qof_instance_get_guid(QOF_INSTANCE(table)));
+        PINFO ("deleting grandchild taxtable: %s\n", guidstr);
+        g_free(guidstr);
 
         /* Make sure the parent has no children */
         parent = gncTaxTableGetParent(table);

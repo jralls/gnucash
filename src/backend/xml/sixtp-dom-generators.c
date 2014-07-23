@@ -266,6 +266,7 @@ add_kvp_slot(gpointer key, gpointer value, gpointer data);
 static void
 add_kvp_value_node(xmlNodePtr node, gchar *tag, kvp_value* val)
 {
+    gchar *guidstr;
     xmlNodePtr val_node;
     kvp_value_t kvp_type;
 
@@ -309,8 +310,9 @@ add_kvp_value_node(xmlNodePtr node, gchar *tag, kvp_value* val)
         break;
     case KVP_TYPE_GUID:
         /* THREAD-UNSAFE */
-        add_text_to_node(val_node, "guid",
-                         g_strdup(guid_to_string(kvp_value_get_guid(val))));
+        guidstr = guid_to_string(kvp_value_get_guid(val));
+        add_text_to_node(val_node, "guid", g_strdup(guidstr));
+        g_free(guidstr);
         break;
     case KVP_TYPE_TIMESPEC:
     {

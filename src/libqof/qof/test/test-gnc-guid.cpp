@@ -45,9 +45,9 @@ static const gchar * suitename {"/qof/gnc-guid"};
 
 /*Create a GUID and free it.*/
 static void test_create_gnc_guid (void){
-    GncGUID * guid {guid_malloc ()};
+    GncGUID * guid {guid_new_ptr_return ()};
     g_assert (guid != nullptr);
-    guid_new (guid);
+    guid_replace (guid);
     /*We apparently don't need to free guid_null (based on its being const)*/
     const GncGUID * guidnull {guid_null ()};
     g_assert (!guid_equal (guid, guidnull));
@@ -56,9 +56,9 @@ static void test_create_gnc_guid (void){
 
 /*We create a GUID, create a copy, and compare them to ensure they're not different.*/
 static void test_gnc_guid_copy (void) {
-    GncGUID * guid {guid_malloc ()};
+    GncGUID * guid {guid_new_ptr_return ()};
     g_assert (guid != nullptr);
-    guid_new (guid);
+    guid_replace (guid);
     GncGUID * cp {guid_copy (guid)};
     g_assert (guid_equal (guid, cp));
     guid_free (cp);
@@ -68,12 +68,13 @@ static void test_gnc_guid_copy (void) {
 /* We create a GUID, then convert it to a string using the two methods
 defined in the guid api. We then compare them.*/
 static void test_gnc_guid_to_string (void) {
-    GncGUID * guid {guid_malloc()};
+    GncGUID * guid {guid_new_ptr_return()};
     g_assert (guid != nullptr);
-    guid_new (guid);
+    guid_replace (guid);
     string message {" using guid_to_string (deprecated): "};
-    /*don't free the return value of guid_to_string!*/
-    string guidstr {guid_to_string (guid)};
+    /* Must free this pointer*/
+    gchar * guidstrp = guid_to_string (guid);
+    string guidstr {guidstrp};
     g_assert (guidstr.size () == GUID_ENCODING_LENGTH);
     message += guidstr;
     g_test_message ("%s", message.c_str ());
@@ -88,16 +89,17 @@ static void test_gnc_guid_to_string (void) {
 
     g_assert (guidstr2 == guidstr);
     guid_free (guid);
+    g_free (guidstrp);
 }
 
 /*We fill a stringstream with random data, convert those to 
 two GUIDs, then ensure that they are equal*/
 static void test_gnc_guid_equals (void) {
-    GncGUID * guid1 {guid_malloc ()};
+    GncGUID * guid1 {guid_new_ptr_return ()};
     g_assert (guid1 != nullptr);
-    GncGUID * guid2 {guid_malloc ()};
+    GncGUID * guid2 {guid_new_ptr_return ()};
     g_assert (guid2 != nullptr);
-    GncGUID * guidold {guid_malloc ()};
+    GncGUID * guidold {guid_new_ptr_return ()};
     g_assert (guidold != nullptr);
 
     mt19937 m;
@@ -131,11 +133,11 @@ static void test_gnc_guid_equals (void) {
 /*We create a new guid, convert it to string, and convert that to
 a guid, ensuring that we end up with an equivalent structure*/
 static void test_gnc_guid_roundtrip (void) {
-    GncGUID * guid1 {guid_malloc ()};
+    GncGUID * guid1 {guid_new_ptr_return ()};
     g_assert (guid1 != nullptr);
-    GncGUID * guid2 {guid_malloc ()};
+    GncGUID * guid2 {guid_new_ptr_return ()};
     g_assert (guid2 != nullptr);
-    guid_new (guid1);
+    guid_replace (guid1);
 
     gchar guidstrp [GUID_ENCODING_LENGTH+1];
     gchar * temp {guid_to_string_buff (guid1, guidstrp)};
@@ -147,14 +149,56 @@ static void test_gnc_guid_roundtrip (void) {
     guid_free (guid1);
 }
 
+static void test_gnc_guid_new_return (void) {
+    GncGUID guid1 (guid_new_return ());
+    g_assert (!guid_equal (&guid1, guid_null ()));
+}
+
+/*guid_new should put a newly generated guid into the parameter. In
+this test, we ensure that the first "new" guid doesn't match a subsequent
+"new" guid in the same memory location.*/
+static void test_gnc_guid_new (void) {
+    GncGUID * guid1 {guid_new_ptr_return ()};
+
+    guid_replace (guid1);
+    GncGUID * guid2 {guid_copy (guid1)};
+    guid_replace (guid1);
+    g_assert (! guid_equal (guid1, guid2));
+
+    guid_free (guid2);
+    guid_free (guid1);
+}
+
+/*We create a bogus guid and ensure that it doesn't get parsed successfully,
+then we pass in a good GUID from string and ensure that the function returns true.*/
+static void test_gnc_guid_from_string (void) {
+    GncGUID * guid1 {guid_new_ptr_return ()};
+    const char * bogus {"01-23-45-6789a.cDeF0123z56789abcdef"};
+
+    /* string_to_guid should return false if either parameter is null*/
+    g_assert (!string_to_guid (nullptr, guid1));
+    g_assert (!string_to_guid (bogus, nullptr));
+
+    g_assert (!string_to_guid (bogus, guid1));
+    //gchar * str = guid_to_string (guid1);
+    //cout << "original was " << bogus << " and returned was " << str << '\n';
+    //g_free (str);
+
+    const char * good {"0123456789abcdef1234567890abcdef"};
+    g_assert (string_to_guid (good, guid1));
+
+    guid_free (guid1);
+}
+
 void test_suite_gnc_guid (void)
 {
-    guid_init ();
     GNC_TEST_ADD_FUNC (suitename, "gnc create guid", test_create_gnc_guid);
     GNC_TEST_ADD_FUNC (suitename, "gnc copy guid", test_gnc_guid_copy);
     GNC_TEST_ADD_FUNC (suitename, "gnc guid to string", test_gnc_guid_to_string);
     GNC_TEST_ADD_FUNC (suitename, "gnc guid equal", test_gnc_guid_equals);
     GNC_TEST_ADD_FUNC (suitename, "gnc guid string roundtrip", test_gnc_guid_roundtrip);
-    guid_shutdown ();
+    GNC_TEST_ADD_FUNC (suitename, "gnc guid from string", test_gnc_guid_from_string);
+    GNC_TEST_ADD_FUNC (suitename, "gnc guid new return", test_gnc_guid_new_return);
+    GNC_TEST_ADD_FUNC (suitename, "gnc guid new", test_gnc_guid_new);
 }
 
