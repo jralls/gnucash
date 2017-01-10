@@ -66,6 +66,7 @@ static QofLogModule log_module = GNC_MOD_GUI;
 
 #ifdef MAC_INTEGRATION
 #  include <Foundation/Foundation.h>
+#  include <gtkmacintegration/gtkosxapplication.h>
 #endif
 
 /* GNUCASH_SCM is defined whenever we're building from an svn/svk/git/bzr tree */
@@ -161,6 +162,49 @@ gnc_print_unstable_message(void)
 }
 
 #ifdef MAC_INTEGRATION
+static void
+set_mac_bundle_paths()
+{
+    char *base_path = gtkosx_application_get_bundle_path();
+    char *lib_path = NULL, *data_path = NULL, *config_path = NULL;
+    char *pixbuf_path = NULL, *module_path = NULL, *im_path = NULL;
+    char *gnc_guile_path = NULL, *guile_comp_path = NULL, *guile_path = NULL;
+    if (!base_path)
+        return;
+    lib_path = g_build_filename (base_path, "Contents", "Resources", "lib", NULL);
+    data_path = g_build_filename (base_path, "Contents", "Resources",
+                                  "share", NULL);
+    config_path = g_build_filename (base_path, "Contents", "Resources",
+                                    "etc", NULL);
+
+    pixbuf_path = g_build_filename (lib_path, "gdk-pixbuf-2.0", "2.10.0",
+                                    "loaders.cache", NULL);
+    module_path = g_build_filename (lib_path, "gnucash", NULL);
+    im_path = g_build_filename (config_path, "gtk-2.0", "gtk.immodules", NULL);
+    gnc_guile_path = g_build_filename (lib_path, "gnucash", "scm", "ccache",
+                                       "2.0", NULL);
+    guile_comp_path = g_build_filename (lib_path, "guile", "2.0", "ccache", NULL);
+    guile_path = g_strdup_printf ("%s:%s", guile_comp_path, gnc_guile_path);
+    g_free (gnc_guile_path);
+    g_free (guile_comp_path);
+
+    g_setenv ("GTK_IM_MODULE_FILE", im_path, TRUE);
+    g_setenv ("GDK_PIXBUF_MODULE_FILE", pixbuf_path, TRUE);
+    g_setenv ("GNC_MODULE_PATH", module_path, TRUE);
+    g_setenv ("GUILE_LOAD_COMPILED_PATH", guile_path, TRUE);
+    g_setenv ("XDG_DATA_DIRS", data_path, TRUE);
+
+    g_free (base_path);
+    g_free (lib_path);
+    g_free (config_path);
+    g_free (data_path);
+    g_free (pixbuf_path);
+    g_free (module_path);
+    g_free (im_path);
+    g_free (guile_path);
+}
+
+
 static void
 mac_set_currency_locale(NSLocale *locale, NSString *locale_str)
 {
@@ -761,6 +805,7 @@ main(int argc, char ** argv)
      * the environment file.
      */
 #ifdef MAC_INTEGRATION
+    set_mac_bundle_paths();
     set_mac_locale();
 #endif
     gnc_environment_setup();
