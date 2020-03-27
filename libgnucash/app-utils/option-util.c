@@ -192,6 +192,7 @@ gnc_option_db_init (GNCOptionDB *odb)
     scm_call_2 (func, scm_from_int (odb->handle), odb->guile_options);
 }
 
+#if 0
 /********************************************************************\
  * gnc_option_db_new                                                *
  *   allocate a new option database and initialize its values       *
@@ -229,7 +230,7 @@ gnc_option_db_new (SCM guile_options)
 
     return odb;
 }
-
+#endif
 /* Create an option DB for a particular data type */
 /* For now, this is global, just like when it was in guile.
    But, it should be make per-book. */
@@ -263,7 +264,7 @@ gnc_make_kvp_options (QofIdType id_type)
     }
     return options;
 }
-
+#if 0
 GNCOptionDB *
 gnc_option_db_new_for_type (QofIdType id_type)
 {
@@ -383,7 +384,7 @@ gnc_option_db_destroy (GNCOptionDB *odb)
 
     g_free(odb);
 }
-
+#endif
 void
 gnc_option_db_set_ui_callbacks (GNCOptionDB *odb,
                                 GNCOptionGetUIValue get_ui_value,
@@ -1293,7 +1294,7 @@ compare_option_tags (gconstpointer a, gconstpointer b)
 
     return result;
 }
-
+#if 0
 /********************************************************************\
  * gnc_option_db_clean                                              *
  *   resets the dirty flag of the option database                   *
@@ -1306,6 +1307,7 @@ gnc_option_db_clean (GNCOptionDB *odb)
 
     odb->options_dirty = FALSE;
 }
+#endif
 
 /********************************************************************\
  * _gnc_option_db_register_option                                   *
@@ -1625,6 +1627,7 @@ gnc_option_db_get_changed (GNCOptionDB *odb)
     return FALSE;
 }
 
+#if 0
 /********************************************************************\
  * gnc_option_db_commit                                             *
  *   commits the options which have changed, and which are valid    *
@@ -1673,6 +1676,7 @@ gnc_option_db_commit (GNCOptionDB *odb)
 
     return commit_errors;
 }
+#endif
 
 /********************************************************************\
  * gnc_option_db_section_reset_widgets                              *
