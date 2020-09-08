@@ -94,7 +94,8 @@ set(gtest_qof_LIBS
   ${GTHREAD_LDFLAGS}
   ${ICU4C_I18N_LDFLAGS}
   ${Boost_LIBRARIES}
-  gtest)
+  gtest
+  gmock)
 
 set(gtest_engine_INCLUDES
   ${MODULEPATH}
@@ -194,6 +195,83 @@ gtest-qofquerycore.cpp)
 gnc_add_test(test-qofquerycore "${test_qofquerycore_SOURCES}"
   gtest_engine_INCLUDES gtest_old_engine_LIBS)
 
+set(test_account_mock_SOURCES
+  ${MODULEPATH}/Account.cpp
+  ${MODULEPATH}/gncAddress.c
+  ${MODULEPATH}/gncBillTerm.c
+  ${MODULEPATH}/gncBusiness.c
+  ${MODULEPATH}/gncCustomer.c
+  ${MODULEPATH}/gncEmployee.c
+  ${MODULEPATH}/gncEntry.c
+  ${MODULEPATH}/gncInvoice.c
+  ${MODULEPATH}/gncJob.c
+  ${MODULEPATH}/gncOrder.c
+  ${MODULEPATH}/gncOwner.c
+  ${MODULEPATH}/gncTaxTable.c
+  ${MODULEPATH}/gncVendor.c
+  ${MODULEPATH}/Scrub.c
+  ${MODULEPATH}/Scrub2.c
+  ${MODULEPATH}/Scrub3.c
+  ${MODULEPATH}/Transaction.c
+  ${MODULEPATH}/Translog.c
+  ${MODULEPATH}/cap-gains.c
+  ${MODULEPATH}/engine-helpers.c
+  ${MODULEPATH}/gnc-commodity.c
+  ${MODULEPATH}/gnc-date.cpp
+  ${MODULEPATH}/gnc-datetime.cpp
+  ${MODULEPATH}/gnc-engine.c
+  ${MODULEPATH}/gnc-features.c
+  ${MODULEPATH}/gnc-int128.cpp
+  ${MODULEPATH}/gnc-lot.c
+  ${MODULEPATH}/gnc-numeric.cpp
+  ${MODULEPATH}/gnc-pricedb.c
+  ${MODULEPATH}/gnc-rational.cpp
+  ${MODULEPATH}/gnc-session.c
+  ${MODULEPATH}/gnc-timezone.cpp
+  ${MODULEPATH}/guid.cpp
+  ${MODULEPATH}/qof-backend.cpp
+  ${MODULEPATH}/qofclass.cpp
+  ${MODULEPATH}/qofchoice.cpp
+  ${MODULEPATH}/qofevent.cpp
+  ${MODULEPATH}/qofid.cpp
+  ${MODULEPATH}/qofinstance.cpp
+  ${MODULEPATH}/qoflog.cpp
+  ${MODULEPATH}/qofobject.cpp
+  ${MODULEPATH}/qofquery.cpp
+  ${MODULEPATH}/qofquerycore.cpp
+  ${MODULEPATH}/qofsession.cpp
+  ${MODULEPATH}/qof-string-cache.cpp
+  ${MODULEPATH}/qofutil.cpp
+  ${MODULEPATH}/kvp-frame.cpp
+  ${MODULEPATH}/kvp-value.cpp
+  ${MODULEPATH}/gnc-numeric.cpp
+  ${MODULEPATH}/policy.c
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/binreloc.c
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/gnc-filepath-utils.cpp
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/gnc-glib-utils.c
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/gnc-locale-utils.c
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/gnc-locale-utils.cpp
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/gnc-path.c
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils/gnc-prefs.c
+  ${MODULEPATH}/mocks/fake-cashobjects.c
+  ${MODULEPATH}/mocks/gmock-qofbook.cpp
+  ${MODULEPATH}/mocks/gmock-Split.cpp
+  gtest-account.cpp)
+
+set(test_account_mock_INCLUDES
+  ${MODULEPATH}/mocks
+  ${MODULEPATH}
+  ${CMAKE_BINARY_DIR}/libgnucash/engine #for iso-4217-currencies.c
+  ${CMAKE_BINARY_DIR}/libgnucash/core-utils #for gncla-dir.h
+  ${CMAKE_SOURCE_DIR}/libgnucash/core-utils
+  ${CMAKE_BINARY_DIR}/common # for config.h
+  ${CMAKE_SOURCE_DIR}/common # for platform.h
+  ${GLIB2_INCLUDE_DIRS}
+  ../../../borrowed/libc
+  )
+
+gnc_add_test(test-account-mock "${test_account_mock_SOURCES}"
+  test_account_mock_INCLUDES gtest_qof_LIBS)
 
 set(test_engine_SOURCES_DIST
         dummy.cpp
