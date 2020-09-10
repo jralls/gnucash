@@ -155,8 +155,8 @@ xaccSplitGetParent (const Split *split)
 void
 xaccSplitSetParent(Split *split, Transaction *trans)
 {
-    g_return_if_fail(GNC_IS_MOCK_SPLIT(split));
-    g_return_if_fail(GNC_IS_TRANSACTION(trans));
+    EXPECT_TRUE(GNC_IS_MOCK_SPLIT(split));
+    ASSERT_TRUE(GNC_IS_TRANSACTION(trans));
     ((MockSplit*)split)->setParent(trans);
 }
 
