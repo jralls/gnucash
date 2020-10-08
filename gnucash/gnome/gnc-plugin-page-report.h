@@ -34,6 +34,11 @@
 #ifndef __GNC_PLUGIN_PAGE_REPORT_H
 #define __GNC_PLUGIN_PAGE_REPORT_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include <gtk/gtk.h>
 #include "gnc-plugin.h"
 
@@ -81,7 +86,9 @@ void       gnc_main_window_open_report (int report_id, GncMainWindow *window);
 void       gnc_main_window_open_report_url (const char * url, GncMainWindow *window);
 
 G_END_DECLS
-
+#ifdef __cplusplus
+}
+#endif
 #endif /* __GNC_PLUGIN_PAGE_REPORT_H */
 /** @} */
 /** @} */
