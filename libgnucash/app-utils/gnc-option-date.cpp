@@ -24,6 +24,8 @@
 #include <array>
 #include <gnc-datetime.hpp>
 #include <iostream>
+#include <cassert>
+#include <algorithm>
 
 extern "C"
 {
@@ -546,4 +548,11 @@ gnc_relative_date_to_time64(RelativeDatePeriod period)
     normalize_tm(now);
     set_day_and_time(now, checked_reldate(period).m_type);
     return static_cast<time64>(GncDateTime(now));
+}
+
+std::ostream&
+operator<<(std::ostream& ostr, RelativeDatePeriod per)
+{
+    ostr << gnc_relative_date_display_string(per);
+    return ostr;
 }
