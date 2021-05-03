@@ -159,7 +159,7 @@ toggle_changed (GtkToggleButton *button, GNCSearchReconciled *fe)
 {
     gboolean is_on = gtk_toggle_button_get_active (button);
     cleared_match_t value =
-        (cleared_match_t) g_object_get_data (G_OBJECT (button), "button-value");
+        GPOINTER_TO_INT (g_object_get_data (G_OBJECT (button), "button-value"));
 
     if (is_on)
         fe->value |= value;
