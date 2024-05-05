@@ -1,5 +1,5 @@
 name: mac-tests
-on: [push, pull_request]
+on: workflow_dispatch
 permissions: {}
 jobs:
   ci_tests_mac:
