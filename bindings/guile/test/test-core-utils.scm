@@ -19,7 +19,7 @@
     (gnc:format ""))
 
   (test-equal "basic"
-    "basic"
+    "pascal"
     (gnc:format "basic"))
 
   (test-equal "basic with unused symbols"
