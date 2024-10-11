@@ -1077,6 +1077,16 @@ qof_instance_set_path_kvp (QofInstance* inst, const StrVec& path, std::optional<
      qof_instance_set_dirty (inst);
 }
 
+template std::optional<const char*> qof_instance_get_path_kvp <const char*> (QofInstance*, const StrVec&);
+template std::optional<gnc_numeric> qof_instance_get_path_kvp <gnc_numeric> (QofInstance*, const StrVec&);
+template std::optional<GncGUID*> qof_instance_get_path_kvp <GncGUID*> (QofInstance*, const StrVec&);
+template std::optional<int64_t> qof_instance_get_path_kvp <int64_t> (QofInstance*, const StrVec&);
+
+template void qof_instance_set_path_kvp <const char*> (QofInstance*, const StrVec&, std::optional<const char*>);
+template void qof_instance_set_path_kvp <gnc_numeric> (QofInstance*, const StrVec&, std::optional<gnc_numeric>);
+template void qof_instance_set_path_kvp <GncGUID*> (QofInstance*, const StrVec&, std::optional<GncGUID*>);
+template void qof_instance_set_path_kvp <int64_t> (QofInstance*, const StrVec&, std::optional<int64_t>);
+
 void qof_instance_get_path_kvp (QofInstance * inst, GValue * value, std::vector<std::string> const & path)
 {
     gvalue_from_kvp_value (inst->kvp_data->get_slot (path), value);
