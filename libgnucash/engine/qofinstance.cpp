@@ -1063,6 +1063,20 @@ qof_instance_set_kvp (QofInstance * inst, GValue const * value, unsigned count, 
     delete inst->kvp_data->set_path (path, kvp_value_from_gvalue (value));
 }
 
+template <typename T> std::optional<T>
+qof_instance_get_path_kvp (QofInstance* inst, const StrVec& path)
+{
+     auto kvp_value{inst->kvp_data->get_slot(path)};
+     return kvp_value ? std::make_optional<T>(kvp_value->get<T>()) : std::nullopt;
+}
+
+template <typename T> void
+qof_instance_set_path_kvp (QofInstance* inst, const StrVec& path, std::optional<T> value)
+{
+     delete inst->kvp_data->set_path(path, value ? new KvpValue(*value) : nullptr);
+     qof_instance_set_dirty (inst);
+}
+
 void qof_instance_get_path_kvp (QofInstance * inst, GValue * value, std::vector<std::string> const & path)
 {
     gvalue_from_kvp_value (inst->kvp_data->get_slot (path), value);

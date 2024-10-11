@@ -2479,20 +2479,6 @@ xaccAccountSetDescription (Account *acc, const char *str)
 
 using StrVec = std::vector<std::string>;
 
-template <typename T> std::optional<T>
-qof_instance_get_path_kvp (QofInstance* inst, StrVec path)
-{
-     auto kvp_value{inst->kvp_data->get_slot(path)};
-     return kvp_value ? std::make_optional<T>(kvp_value->get<T>()) : std::nullopt;
-}
-
-template <typename T> void
-qof_instance_set_path_kvp (QofInstance* inst, StrVec path, std::optional<T> value)
-{
-     delete inst->kvp_data->set_path(path, value ? new KvpValue(*value) : nullptr);
-     qof_instance_set_dirty (inst);
-}
-
 static void
 set_kvp_gnc_numeric_path (Account *acc, const std::vector<std::string>& path,
                           std::optional<gnc_numeric> value)
