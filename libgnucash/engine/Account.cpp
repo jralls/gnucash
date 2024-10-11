@@ -5538,36 +5538,18 @@ gnc_account_imap_find_account_bayes (Account *acc, GList *tokens)
 static void
 change_imap_entry (Account *acc, std::string const & path, int64_t token_count)
 {
-    GValue value = G_VALUE_INIT;
-
     PINFO("Source Account is '%s', Count is '%" G_GINT64_FORMAT "'",
            xaccAccountGetName (acc), token_count);
 
     // check for existing guid entry
-    if (qof_instance_has_slot (QOF_INSTANCE(acc), path.c_str ()))
+    if (auto existing_token_count = get_kvp_int64_path (acc, {path}))
     {
-        int64_t  existing_token_count = 0;
-
-        // get the existing_token_count value
-        qof_instance_get_path_kvp (QOF_INSTANCE (acc), &value, {path});
-
-        if (G_VALUE_HOLDS_INT64 (&value))
-            existing_token_count = g_value_get_int64 (&value);
-
-        PINFO("found existing value of '%" G_GINT64_FORMAT "'", existing_token_count);
-
-        token_count = token_count + existing_token_count;
+        PINFO("found existing value of '%" G_GINT64_FORMAT "'", *existing_token_count);
+        token_count += *existing_token_count;
     }
 
-    if (!G_IS_VALUE (&value))
-        g_value_init (&value, G_TYPE_INT64);
-
-    g_value_set_int64 (&value, token_count);
-
     // Add or Update the entry based on guid
-    qof_instance_set_path_kvp (QOF_INSTANCE (acc), &value, {path});
-    gnc_features_set_used (gnc_account_get_book(acc), GNC_FEATURE_GUID_FLAT_BAYESIAN);
-    g_value_unset (&value);
+    set_kvp_int64_path (acc, {path}, token_count);
 }
 
 /** Updates the imap for a given account using a list of tokens */
@@ -5601,22 +5583,23 @@ gnc_account_imap_add_account_bayes (Account *acc,
     for (current_token = g_list_first(tokens); current_token;
             current_token = current_token->next)
     {
+        char* token = static_cast<char*>(current_token->data);
         /* Jump to next iteration if the pointer is not valid or if the
                  string is empty. In HBCI import we almost always get an empty
                  string, which doesn't work in the kvp loopkup later. So we
                  skip this case here. */
-        if (!current_token->data || (*((char*)current_token->data) == '\0'))
+        if (!token || !token[0])
             continue;
         /* start off with one token for this account */
         token_count = 1;
-        PINFO("adding token '%s'", (char*)current_token->data);
-        auto path = std::string {IMAP_FRAME_BAYES} + '/' + static_cast<char*>(current_token->data) + '/' + guid_string;
+        PINFO("adding token '%s'", token);
+        auto path = std::string {IMAP_FRAME_BAYES} + '/' + token + '/' + guid_string;
         /* change the imap entry for the account */
         change_imap_entry (acc, path, token_count);
     }
     /* free up the account fullname and guid string */
-    qof_instance_set_dirty (QOF_INSTANCE (acc));
     xaccAccountCommitEdit (acc);
+    gnc_features_set_used (gnc_account_get_book(acc), GNC_FEATURE_GUID_FLAT_BAYESIAN);
     g_free (account_fullname);
     g_free (guid_string);
     LEAVE(" ");
