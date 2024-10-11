@@ -1064,28 +1064,30 @@ qof_instance_set_kvp (QofInstance * inst, GValue const * value, unsigned count, 
 }
 
 template <typename T> std::optional<T>
-qof_instance_get_path_kvp (QofInstance* inst, const StrVec& path)
+qof_instance_get_path_kvp (QofInstance* inst, const std::vector<std::string>& path)
 {
-     auto kvp_value{inst->kvp_data->get_slot(path)};
-     return kvp_value ? std::make_optional<T>(kvp_value->get<T>()) : std::nullopt;
+    g_return_val_if_fail(inst, std::nullopt);
+    auto kvp_value{inst->kvp_data->get_slot(path)};
+    return kvp_value ? std::make_optional<T>(kvp_value->get<T>()) : std::nullopt;
 }
 
 template <typename T> void
-qof_instance_set_path_kvp (QofInstance* inst, const StrVec& path, std::optional<T> value)
+qof_instance_set_path_kvp (QofInstance* inst, std::optional<T> value, const std::vector<std::string>& path)
 {
-     delete inst->kvp_data->set_path(path, value ? new KvpValue(*value) : nullptr);
-     qof_instance_set_dirty (inst);
+    g_return_if_fail(inst);
+    delete inst->kvp_data->set_path(path, value ? new KvpValue(*value) : nullptr);
+    qof_instance_set_dirty (inst);
 }
 
-template std::optional<const char*> qof_instance_get_path_kvp <const char*> (QofInstance*, const StrVec&);
-template std::optional<gnc_numeric> qof_instance_get_path_kvp <gnc_numeric> (QofInstance*, const StrVec&);
-template std::optional<GncGUID*> qof_instance_get_path_kvp <GncGUID*> (QofInstance*, const StrVec&);
-template std::optional<int64_t> qof_instance_get_path_kvp <int64_t> (QofInstance*, const StrVec&);
+template std::optional<const char*> qof_instance_get_path_kvp <const char*> (QofInstance*, const std::vector<std::string>&);
+template std::optional<gnc_numeric> qof_instance_get_path_kvp <gnc_numeric> (QofInstance*, const std::vector<std::string>&);
+template std::optional<GncGUID*> qof_instance_get_path_kvp <GncGUID*> (QofInstance*, const std::vector<std::string>&);
+template std::optional<int64_t> qof_instance_get_path_kvp <int64_t> (QofInstance*, const std::vector<std::string>&);
 
-template void qof_instance_set_path_kvp <const char*> (QofInstance*, const StrVec&, std::optional<const char*>);
-template void qof_instance_set_path_kvp <gnc_numeric> (QofInstance*, const StrVec&, std::optional<gnc_numeric>);
-template void qof_instance_set_path_kvp <GncGUID*> (QofInstance*, const StrVec&, std::optional<GncGUID*>);
-template void qof_instance_set_path_kvp <int64_t> (QofInstance*, const StrVec&, std::optional<int64_t>);
+template void qof_instance_set_path_kvp <const char*> (QofInstance*, std::optional<const char*>, const std::vector<std::string>& path);
+template void qof_instance_set_path_kvp <gnc_numeric> (QofInstance*, std::optional<gnc_numeric>, const std::vector<std::string>& path);
+template void qof_instance_set_path_kvp <GncGUID*> (QofInstance*, std::optional<GncGUID*>, const std::vector<std::string>& path);
+template void qof_instance_set_path_kvp <int64_t> (QofInstance*, std::optional<int64_t>, const std::vector<std::string>& path);
 
 void qof_instance_get_path_kvp (QofInstance * inst, GValue * value, std::vector<std::string> const & path)
 {

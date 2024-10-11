@@ -166,13 +166,11 @@ void qof_instance_get_path_kvp (QofInstance *, GValue *, std::vector<std::string
 
 void qof_instance_set_path_kvp (QofInstance *, GValue const *, std::vector<std::string> const &);
 
-using StrVec = std::vector<std::string>;
-
 template <typename T> std::optional<T>
-qof_instance_get_path_kvp (QofInstance*, const StrVec&);
+qof_instance_get_path_kvp (QofInstance*, const std::vector<std::string>&);
 
 template <typename T> void
-qof_instance_set_path_kvp (QofInstance*, const StrVec&, std::optional<T>);
+qof_instance_set_path_kvp (QofInstance*, std::optional<T>, const std::vector<std::string>&);
 
 bool qof_instance_has_path_slot (QofInstance const *, std::vector<std::string> const &);
 

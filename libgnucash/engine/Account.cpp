@@ -2486,7 +2486,7 @@ set_kvp_gnc_numeric_path (Account *acc, const std::vector<std::string>& path,
     g_return_if_fail(GNC_IS_ACCOUNT(acc));
 
     xaccAccountBeginEdit(acc);
-    qof_instance_set_path_kvp<gnc_numeric> (QOF_INSTANCE(acc), path, value);
+    qof_instance_set_path_kvp<gnc_numeric> (QOF_INSTANCE(acc), value, path);
     xaccAccountCommitEdit(acc);
 }
 
@@ -2503,12 +2503,12 @@ set_kvp_string_path (Account *acc, std::vector<std::string> const & path,
 {
     g_return_if_fail(GNC_IS_ACCOUNT(acc));
 
-    std::optional<char*> val;
+    std::optional<const char*> val;
     if (value && *value)
         val = g_strdup(value);
 
     xaccAccountBeginEdit(acc);
-    qof_instance_set_path_kvp<const char*> (QOF_INSTANCE(acc), path, val);
+    qof_instance_set_path_kvp<const char*> (QOF_INSTANCE(acc), val, path);
     xaccAccountCommitEdit(acc);
 }
 
@@ -2529,7 +2529,7 @@ set_kvp_account_path (Account* acc, const StrVec& path, const Account* kvp_accou
         val = guid_copy(xaccAccountGetGUID (kvp_account));
 
     xaccAccountBeginEdit(acc);
-    qof_instance_set_path_kvp<GncGUID*> (QOF_INSTANCE(acc), path, val);
+    qof_instance_set_path_kvp<GncGUID*> (QOF_INSTANCE(acc), val, path);
     xaccAccountCommitEdit(acc);
 }
 
@@ -2571,7 +2571,7 @@ set_kvp_int64_path (Account *acc, const StrVec& path, std::optional<gint64> valu
     g_return_if_fail(GNC_IS_ACCOUNT(acc));
 
     xaccAccountBeginEdit(acc);
-    qof_instance_set_path_kvp<int64_t> (QOF_INSTANCE(acc), path, value);
+    qof_instance_set_path_kvp<int64_t> (QOF_INSTANCE(acc), value, path);
     xaccAccountCommitEdit(acc);
 }
 
