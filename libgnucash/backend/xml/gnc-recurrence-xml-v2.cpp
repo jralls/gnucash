@@ -52,13 +52,13 @@ const gchar* recurrence_version_string = "1.0.0";
 static gboolean
 recurrence_period_type_handler (xmlNodePtr node, gpointer d)
 {
-    auto r = static_cast<Recurrence*>(d);
-    auto set_ptype = [](Recurrence *r, const char* txt)
-    {
-        r->ptype = recurrencePeriodTypeFromString (txt);
-    };
-    apply_xmlnode_text (set_ptype, r, node);
-    return (r->ptype != -1);
+    PeriodType pt;
+
+    auto nodeTxt = dom_tree_to_text (node);
+    g_return_val_if_fail (nodeTxt, FALSE);
+    pt = recurrencePeriodTypeFromString (nodeTxt->c_str());
+    ((Recurrence*) d)->ptype = pt;
+    return (pt != -1);
 }
 
 static gboolean
@@ -83,13 +83,13 @@ recurrence_mult_handler (xmlNodePtr node, gpointer r)
 static gboolean
 recurrence_weekend_adj_handler (xmlNodePtr node, gpointer d)
 {
-    auto r = static_cast<Recurrence*>(d);
-    auto set_wadj = [](Recurrence *r, const char* txt)
-    {
-        r->wadj = recurrenceWeekendAdjustFromString (txt);
-    };
-    apply_xmlnode_text (set_wadj, r, node);
-    return (r->wadj != -1);
+    WeekendAdjust wadj;
+
+    auto nodeTxt = dom_tree_to_text (node);
+    g_return_val_if_fail (nodeTxt, FALSE);
+    wadj = recurrenceWeekendAdjustFromString (nodeTxt->c_str());
+    ((Recurrence*) d)->wadj = wadj;
+    return (wadj != -1);
 }
 
 static struct dom_tree_handler recurrence_dom_handlers[] =

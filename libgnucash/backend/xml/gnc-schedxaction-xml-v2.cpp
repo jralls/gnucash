@@ -223,7 +223,12 @@ gboolean
 sx_name_handler (xmlNodePtr node, gpointer sx_pdata)
 {
     struct sx_pdata* pdata = static_cast<decltype (pdata)> (sx_pdata);
-    return apply_xmlnode_text (xaccSchedXactionSetName, pdata->sx, node);
+    SchedXaction* sx = pdata->sx;
+    auto tmp = dom_tree_to_text (node);
+    g_return_val_if_fail (tmp, FALSE);
+    DEBUG ("sx named [%s]", tmp->c_str());
+    xaccSchedXactionSetName (sx, tmp->c_str());
+    return TRUE;
 }
 
 static gboolean
@@ -232,7 +237,7 @@ sx_enabled_handler (xmlNodePtr node, gpointer sx_pdata)
     struct sx_pdata* pdata = static_cast<decltype (pdata)> (sx_pdata);
     auto set_enabled = [](SchedXaction* sx, const char* txt)
     {
-        sx->enabled = !g_strcmp0 (txt, "y");
+        sx->enabled = g_strcmp0 (txt, "y") == 0 ? TRUE : FALSE;
     };
     return apply_xmlnode_text (set_enabled, pdata->sx, node);
 }
@@ -243,7 +248,7 @@ sx_autoCreate_handler (xmlNodePtr node, gpointer sx_pdata)
     struct sx_pdata* pdata = static_cast<decltype (pdata)> (sx_pdata);
     auto set_autocreate = [](SchedXaction* sx, const char* txt)
     {
-        sx->autoCreateOption = !g_strcmp0 (txt, "y");
+        sx->autoCreateOption = g_strcmp0 (txt, "y") == 0 ? TRUE : FALSE;
     };
     return apply_xmlnode_text (set_autocreate, pdata->sx, node);
 }
@@ -254,7 +259,7 @@ sx_notify_handler (xmlNodePtr node, gpointer sx_pdata)
     struct sx_pdata* pdata = static_cast<decltype (pdata)> (sx_pdata);
     auto set_notify = [](SchedXaction* sx, const char* txt)
     {
-        sx->autoCreateNotify = !g_strcmp0 (txt, "y");
+        sx->autoCreateNotify = g_strcmp0 (txt, "y") == 0 ? TRUE : FALSE;
     };
     return apply_xmlnode_text (set_notify, pdata->sx, node);
 }

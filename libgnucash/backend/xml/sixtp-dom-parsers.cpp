@@ -47,46 +47,74 @@ dom_node_to_text (xmlNodePtr node) noexcept
 std::optional<GncGUID>
 dom_tree_to_guid (xmlNodePtr node)
 {
-    auto type = xmlGetProp (node, BAD_CAST "type");
-    if (!type)
-        return {};
-
-    bool ok = !g_strcmp0 ((char*)type, "guid") || !g_strcmp0 ((char*)type, "new");
-
-    xmlFree (type);
-
-    if (!ok)
-        return {};
-
-    auto extract_guid = [](auto str) -> std::optional<GncGUID>
+    if (!node->properties)
     {
-        if (GncGUID guid; string_to_guid (str, &guid))
-            return guid;
-
         return {};
-    };
+    }
 
-    return apply_xmlnode_text<std::optional<GncGUID>>(extract_guid, node);
+    if (strcmp ((char*) node->properties->name, "type") != 0)
+    {
+        PERR ("Unknown attribute for id tag: %s",
+              node->properties->name ?
+              (char*) node->properties->name : "(null)");
+        return {};
+    }
+
+    {
+        char* type;
+
+        type = (char*)xmlNodeGetContent (node->properties->xmlAttrPropertyValue);
+
+        /* handle new and guid the same for the moment */
+        if ((g_strcmp0 ("guid", type) == 0) || (g_strcmp0 ("new", type) == 0))
+        {
+            GncGUID gid;
+            char* guid_str;
+
+            guid_str = (char*)xmlNodeGetContent (node->xmlChildrenNode);
+            string_to_guid (guid_str, &gid);
+            xmlFree (guid_str);
+            xmlFree (type);
+            return gid;
+        }
+        else
+        {
+            PERR ("Unknown type %s for attribute type for tag %s",
+                  type ? type : "(null)",
+                  node->properties->name ?
+                  (char*) node->properties->name : "(null)");
+            xmlFree (type);
+            return {};
+        }
+    }
 }
 
 static KvpValue*
 dom_tree_to_integer_kvp_value (xmlNodePtr node)
 {
-    auto node_to_int_kvp = [](auto txt) -> KvpValue*
-    {
-        if (gint64 daint; string_to_gint64 (txt, &daint))
-            return new KvpValue{daint};
+    gint64 daint;
+    KvpValue* ret = NULL;
 
-        return nullptr;
-    };
-    return apply_xmlnode_text<KvpValue*> (node_to_int_kvp, node, nullptr);
+    auto text = dom_tree_to_text (node);
+
+    if (text && string_to_gint64 (text->c_str(), &daint))
+    {
+        ret = new KvpValue {daint};
+    }
+
+    return ret;
 }
 
 template <typename T>
 static bool
 dom_tree_to_num (xmlNodePtr node, std::function<bool(const char*, T*)>string_to_num, T* num_ptr)
 {
-    return apply_xmlnode_text<T>([&](auto txt){ return string_to_num (txt, num_ptr);}, node, false);
+    bool ret = false;
+    auto text = dom_tree_to_text (node);
+    if (text)
+        ret = string_to_num (text->c_str(), num_ptr);
+
+    return ret;
 }
 
 gboolean
@@ -303,7 +331,6 @@ dom_tree_to_kvp_value (xmlNodePtr node)
     }
 
     xmlFree (xml_type);
-
     return ret;
 }
 
@@ -502,14 +529,6 @@ dom_tree_to_gdate (xmlNodePtr node)
     gboolean seen_date = FALSE;
     xmlNodePtr n;
 
-    auto try_setting_date = [&ret](const char *content) -> bool
-    {
-        gint year = 0, month = 0, day = 0;
-        if (sscanf (content, "%d-%d-%d", &year, &month, &day) != 3) return false;
-        g_date_set_dmy (&ret, day, static_cast<GDateMonth>(month), year);
-        return (g_date_valid (&ret));
-    };
-
     /* creates an invalid date */
     g_date_clear (&ret, 1);
 
@@ -523,9 +542,30 @@ dom_tree_to_gdate (xmlNodePtr node)
         case XML_ELEMENT_NODE:
             if (g_strcmp0 ("gdate", (char*)n->name) == 0)
             {
-                if (seen_date || !apply_xmlnode_text<bool> (try_setting_date, n))
+                if (seen_date)
+                {
                     return NULL;
-                seen_date = TRUE;
+                }
+                else
+                {
+                    auto content = dom_tree_to_text (n);
+                    gint year, month, day;
+                    if (!content)
+                    {
+                        return NULL;
+                    }
+
+                    if (sscanf (content->c_str(), "%d-%d-%d", &year, &month, &day) != 3)
+                        return NULL;
+
+                    seen_date = TRUE;
+                    g_date_set_dmy (&ret, day, static_cast<GDateMonth> (month), year);
+                    if (!g_date_valid (&ret))
+                    {
+                        PWARN ("invalid date");
+                        return NULL;
+                    }
+                }
             }
             break;
         default:
@@ -549,14 +589,6 @@ struct CommodityRef
     std::string id;
 };
 
-std::string
-gnc_strstrip (std::string_view sv)
-{
-    while (!sv.empty () && g_ascii_isspace (sv.front())) sv.remove_prefix (1);
-    while (!sv.empty () && g_ascii_isspace (sv.back())) sv.remove_suffix (1);
-    return std::string (sv);
-}
-
 static std::optional<CommodityRef>
 parse_commodity_ref (xmlNodePtr node, QofBook* book)
 {
@@ -571,8 +603,8 @@ parse_commodity_ref (xmlNodePtr node, QofBook* book)
        are required, though for now, order is irrelevant. */
 
     CommodityRef rv;
-    bool space_set{false};
-    bool id_set{false};
+    gchar* space_str = NULL;
+    gchar* id_str = NULL;
     xmlNodePtr n;
 
     if (!node) return {};
@@ -588,21 +620,29 @@ parse_commodity_ref (xmlNodePtr node, QofBook* book)
         case XML_ELEMENT_NODE:
             if (g_strcmp0 ("cmdty:space", (char*)n->name) == 0)
             {
-                if (space_set)
+                if (space_str)
                 {
                     return {};
                 }
-                rv.space = apply_xmlnode_text<std::string> (gnc_strstrip, n);
-                space_set = true;
+                else
+                {
+                    auto content = dom_tree_to_text (n);
+                    if (!content) return {};
+                    space_str = g_strdup (content->c_str());
+                }
             }
             else if (g_strcmp0 ("cmdty:id", (char*)n->name) == 0)
             {
-                if (id_set)
+                if (id_str)
                 {
                     return {};
                 }
-                rv.id = apply_xmlnode_text<std::string> (gnc_strstrip, n);
-                id_set = true;
+                else
+                {
+                    auto content = dom_tree_to_text (n);
+                    if (!content) return {};
+                    id_str = g_strdup (content->c_str());
+                }
             }
             break;
         default:
@@ -611,10 +651,17 @@ parse_commodity_ref (xmlNodePtr node, QofBook* book)
             break;
         }
     }
-    if (space_set && id_set)
-        return rv;
+    if (space_str && id_str)
+    {
+        g_strstrip (space_str);
+        g_strstrip (id_str);
+        rv = {space_str, id_str};
+    }
 
-    return {};
+    g_free (space_str);
+    g_free (id_str);
+
+    return rv;
 }
 
 gnc_commodity*

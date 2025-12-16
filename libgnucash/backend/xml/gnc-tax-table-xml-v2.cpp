@@ -161,13 +161,18 @@ static gboolean
 ttentry_type_handler (xmlNodePtr node, gpointer ttentry_pdata)
 {
     struct ttentry_pdata* pdata = static_cast<decltype (pdata)> (ttentry_pdata);
-    auto tte_settype = [](GncTaxTableEntry* tt, const char *str)
-    {
-        GncAmountType type;
-        if (gncAmountStringToType (str, &type))
-            gncTaxTableEntrySetType (tt, type);
-    };
-    return apply_xmlnode_text (tte_settype, pdata->ttentry, node);
+    GncAmountType type;
+    gboolean ret;
+
+    auto str = dom_tree_to_text (node);
+    g_return_val_if_fail (str, FALSE);
+
+    ret = gncAmountStringToType (str->c_str(), &type);
+
+    if (ret)
+        gncTaxTableEntrySetType (pdata->ttentry, type);
+
+    return ret;
 }
 
 static gboolean
@@ -274,7 +279,11 @@ static gboolean
 taxtable_name_handler (xmlNodePtr node, gpointer taxtable_pdata)
 {
     struct taxtable_pdata* pdata = static_cast<decltype (pdata)> (taxtable_pdata);
-    return apply_xmlnode_text (gncTaxTableSetName, pdata->table, node);
+    auto txt = dom_tree_to_text (node);
+    g_return_val_if_fail (txt, FALSE);
+
+    gncTaxTableSetName (pdata->table, txt->c_str());
+    return TRUE;
 }
 
 static gboolean

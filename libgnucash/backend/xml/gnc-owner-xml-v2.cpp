@@ -100,19 +100,24 @@ static gboolean
 owner_type_handler (xmlNodePtr node, gpointer owner_pdata)
 {
     struct owner_pdata* pdata = static_cast<decltype (pdata)> (owner_pdata);
-    GncOwner* owner = pdata->owner;
-    auto init_owner_type = [](GncOwner* owner, const char* txt)
+    auto txt = dom_tree_to_text (node);
+    g_return_val_if_fail (txt, FALSE);
+
+    if (!g_strcmp0 (txt->c_str(), GNC_ID_CUSTOMER))
+        gncOwnerInitCustomer (pdata->owner, NULL);
+    else if (!g_strcmp0 (txt->c_str(), GNC_ID_JOB))
+        gncOwnerInitJob (pdata->owner, NULL);
+    else if (!g_strcmp0 (txt->c_str(), GNC_ID_VENDOR))
+        gncOwnerInitVendor (pdata->owner, NULL);
+    else if (!g_strcmp0 (txt->c_str(), GNC_ID_EMPLOYEE))
+        gncOwnerInitEmployee (pdata->owner, NULL);
+    else
     {
-        if (!g_strcmp0 (txt, GNC_ID_CUSTOMER))
-            gncOwnerInitCustomer (owner, NULL);
-        else if (!g_strcmp0 (txt, GNC_ID_JOB))
-            gncOwnerInitJob (owner, NULL);
-        else if (!g_strcmp0 (txt, GNC_ID_VENDOR))
-            gncOwnerInitVendor (owner, NULL);
-        else if (!g_strcmp0 (txt, GNC_ID_EMPLOYEE))
-            gncOwnerInitEmployee (owner, NULL);
-    };
-    return apply_xmlnode_text (init_owner_type, owner, node);
+        PWARN ("Unknown owner type: %s", txt->c_str());
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 static gboolean

@@ -393,30 +393,36 @@ static gboolean
 entry_idisctype_handler (xmlNodePtr node, gpointer entry_pdata)
 {
     struct entry_pdata* pdata = static_cast<decltype (pdata)> (entry_pdata);
-    auto entry = pdata->entry;
-    auto set_discount_type = [entry](auto str)
-    {
-        GncAmountType type;
-        if (!gncAmountStringToType (str, &type)) return false;
-        gncEntrySetInvDiscountType (entry, type);
-        return true;
-    };
-    return apply_xmlnode_text (set_discount_type, node, FALSE);
+    GncAmountType type;
+    gboolean ret;
+
+    auto str = dom_tree_to_text (node);
+    g_return_val_if_fail (str, FALSE);
+
+    ret = gncAmountStringToType (str->c_str(), &type);
+
+    if (ret)
+        gncEntrySetInvDiscountType (pdata->entry, type);
+
+    return ret;
 }
 
 static gboolean
 entry_idischow_handler (xmlNodePtr node, gpointer entry_pdata)
 {
     struct entry_pdata* pdata = static_cast<decltype (pdata)> (entry_pdata);
-    auto entry = pdata->entry;
-    auto set_discount_how = [entry](auto str)
-    {
-        GncDiscountHow how;
-        if (!gncEntryDiscountStringToHow (str, &how)) return false;
-        gncEntrySetInvDiscountHow (entry, how);
-        return true;
-    };
-    return apply_xmlnode_text (set_discount_how, node, FALSE);
+    GncDiscountHow how;
+    gboolean ret;
+
+    auto str = dom_tree_to_text (node);
+    g_return_val_if_fail (str, FALSE);
+
+    ret = gncEntryDiscountStringToHow (str->c_str(), &how);
+
+    if (ret)
+        gncEntrySetInvDiscountHow (pdata->entry, how);
+
+    return ret;
 }
 
 static gboolean
@@ -504,15 +510,18 @@ static gboolean
 entry_billpayment_handler (xmlNodePtr node, gpointer entry_pdata)
 {
     struct entry_pdata* pdata = static_cast<decltype (pdata)> (entry_pdata);
-    auto entry = pdata->entry;
-    auto set_billpayment = [entry](auto str)
-    {
-        GncEntryPaymentType type;
-        if (!gncEntryPaymentStringToType (str, &type)) return false;
-        gncEntrySetBillPayment (entry, type);
-        return true;
-    };
-    return apply_xmlnode_text (set_billpayment, node, FALSE);
+    GncEntryPaymentType type;
+    gboolean ret;
+
+    auto str = dom_tree_to_text (node);
+    g_return_val_if_fail (str, FALSE);
+
+    ret = gncEntryPaymentStringToType (str->c_str(), &type);
+
+    if (ret)
+        gncEntrySetBillPayment (pdata->entry, type);
+
+    return ret;
 }
 
 /* The rest of the stuff */

@@ -244,13 +244,18 @@ static gboolean
 customer_taxincluded_handler (xmlNodePtr node, gpointer cust_pdata)
 {
     struct customer_pdata* pdata = static_cast<decltype (pdata)> (cust_pdata);
-    auto set_tax_included = [](GncCustomer* cust, const char *str)
-    {
-        GncTaxIncluded type;
-        if (gncTaxIncludedStringToType (str, &type))
-            gncCustomerSetTaxIncluded (cust, type);
-    };
-    return apply_xmlnode_text (set_tax_included, pdata->customer, node);
+    GncTaxIncluded type;
+    gboolean ret;
+
+    auto str = dom_tree_to_text (node);
+    g_return_val_if_fail (str, FALSE);
+
+    ret = gncTaxIncludedStringToType (str->c_str(), &type);
+
+    if (ret)
+        gncCustomerSetTaxIncluded (pdata->customer, type);
+
+    return ret;
 }
 
 static gboolean

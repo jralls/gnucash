@@ -391,9 +391,10 @@ gnc_counter_end_handler (gpointer data_for_children,
      * This is invalid xml because the namespace isn't declared in the
      * tag itself. This should be changed to 'type' at some point. */
     type = (char*)xmlGetProp (tree, BAD_CAST "cd:type");
-    if (!apply_xmlnode_text<bool> ([&val](auto txt){ return string_to_gint64 (txt, &val);}, tree))
+    auto strval = dom_tree_to_text (tree);
+    xmlFreeNode (tree);
+    if (!strval || !string_to_gint64 (strval->c_str(), &val))
     {
-        auto strval = dom_tree_to_text (tree);
         PERR ("string_to_gint64 failed with input: %s",
               strval ? strval->c_str() : "(null)");
         ret = FALSE;
@@ -449,7 +450,6 @@ gnc_counter_end_handler (gpointer data_for_children,
     }
 
     xmlFree (type);
-    xmlFreeNode (tree);
     return ret;
 }
 
