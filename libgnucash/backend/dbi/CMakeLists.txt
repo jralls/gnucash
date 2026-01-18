@@ -30,7 +30,7 @@ if (WITH_SQL)
   )
 
   set(WINSOCK_LIB "")
-  if(MINGW64)
+  if(WIN32)
     set(WINSOCK_LIB "-lws2_32")
   endif()
   target_link_libraries(gncmod-backend-dbi gnc-backend-sql gnc-engine ${GTK2_LDFLAGS} ${Boost_REGEX_LIBRARY} ${LIBDBI_LIBRARY} ${WINSOCK_LIB})
