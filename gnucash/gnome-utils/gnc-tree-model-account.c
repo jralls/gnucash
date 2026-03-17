@@ -25,9 +25,11 @@
 
 #include <config.h>
 
+#include <glib-object.h>
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "gnc-tree-model-account.h"
 #include "gnc-component-manager.h"
@@ -97,7 +99,7 @@ struct _GncTreeModelAccount
     int stamp;                      /**< The state of the model. Any state
                                      *   change increments this number. */
     QofBook *book;
-    Account *root;
+    GWeakRef root;
     gint event_handler_id;
     gchar *negative_color;
 
@@ -145,6 +147,16 @@ gnc_tree_model_account_update_color (gpointer gsettings, gchar *key, gpointer us
         model->negative_color = NULL;
 }
 
+static bool
+g_weak_ref_eq(GWeakRef* wr, void* ptr)
+{
+    void* wrp = g_weak_ref_get (wr);
+    bool rv = wrp == ptr;
+    if (wrp)
+        g_object_unref (wrp);
+    return rv;
+}
+
 /************************************************************/
 /*               g_object required functions                */
 /************************************************************/
@@ -175,7 +187,7 @@ gnc_tree_model_account_init (GncTreeModelAccount *model)
     use_red = gnc_prefs_get_bool (GNC_PREFS_GROUP_GENERAL, GNC_PREF_NEGATIVE_IN_RED);
 
     model->book = NULL;
-    model->root = NULL;
+//    g_weak_ref_clear(&model->root);
 
     if (model->negative_color)
         g_free (model->negative_color);
@@ -242,7 +254,7 @@ gnc_tree_model_account_dispose (GObject *object)
                                  gnc_tree_model_account_update_color,
                                  model);
 
-    model->root = NULL;
+    g_weak_ref_clear(&model->root);
     G_OBJECT_CLASS(gnc_tree_model_account_parent_class)->dispose (object);
     LEAVE(" ");
 }
@@ -263,7 +275,7 @@ gnc_tree_model_account_new (Account *root)
     for ( ; item; item = g_list_next (item))
     {
         model = (GncTreeModelAccount *)item->data;
-        if (model->root == root)
+        if (g_weak_ref_eq (&model->root, root))
         {
             g_object_ref (G_OBJECT(model));
             LEAVE("returning existing model %p", model);
@@ -274,7 +286,7 @@ gnc_tree_model_account_new (Account *root)
     model = g_object_new (GNC_TYPE_TREE_MODEL_ACCOUNT, NULL);
 
     model->book = gnc_get_current_book();
-    model->root = root;
+    g_weak_ref_init(&model->root, root);
 
     model->event_handler_id = qof_event_register_handler
                              ((QofEventHandler)gnc_tree_model_account_event_handler, model);
@@ -445,7 +457,13 @@ gnc_tree_model_account_get_iter (GtkTreeModel *tree_model,
     }
 
     parent = NULL;
-    account = model->root;
+    Account* m_root = g_weak_ref_get(&model->root);
+    if (!m_root)
+    {
+        LEAVE("No root account");
+        return FALSE;
+    }
+    account = m_root;
     for (i = 1; i < gtk_tree_path_get_depth (path); i++)
     {
         parent = account;
@@ -454,10 +472,11 @@ gnc_tree_model_account_get_iter (GtkTreeModel *tree_model,
         {
             iter->stamp = 0;
             LEAVE("bad index");
+            g_object_unref(m_root);
             return FALSE;
         }
     }
-
+    g_object_unref(m_root);
     iter->stamp = model->stamp;
     iter->user_data = account;
     iter->user_data2 = parent;
@@ -483,7 +502,7 @@ gnc_tree_model_account_get_path (GtkTreeModel *tree_model,
 
     ENTER("model %p, iter %s", model, iter_to_string (iter));
 
-    if (model->root == NULL)
+    if (g_weak_ref_eq(&model->root, NULL))
     {
         LEAVE("failed (1)");
         return NULL;
@@ -542,7 +561,7 @@ gnc_tree_model_account_compute_period_balance (GncTreeModelAccount *model,
     if (negative)
         *negative = FALSE;
 
-    if (acct == model->root)
+    if (g_weak_ref_eq (&model->root, acct))
         return g_strdup ("");
 
     t1 = gnc_accounting_period_fiscal_start ();
@@ -719,7 +738,7 @@ gnc_tree_model_account_get_value (GtkTreeModel *tree_model,
     {
     case GNC_TREE_MODEL_ACCOUNT_COL_NAME:
         g_value_init (value, G_TYPE_STRING);
-        if (account == model->root)
+        if (g_weak_ref_eq (&model->root, account))
             g_value_set_string (value, _("New top level account"));
         else
             g_value_set_string (value, xaccAccountGetName (account));
@@ -1016,7 +1035,7 @@ gnc_tree_model_account_iter_children (GtkTreeModel *tree_model,
 
     model = GNC_TREE_MODEL_ACCOUNT(tree_model);
 
-    if (model->root == NULL)
+    if (g_weak_ref_eq (&model->root, NULL))
     {
         iter->stamp = 0;
         LEAVE("failed (no root)");
@@ -1026,7 +1045,11 @@ gnc_tree_model_account_iter_children (GtkTreeModel *tree_model,
     /* Special case when no parent supplied. */
     if (!parent_iter)
     {
-        iter->user_data = model->root;
+        
+        Account* acct = g_weak_ref_get (&model->root);
+        if (acct)
+            g_object_unref (acct);
+        iter->user_data = acct;
         iter->user_data2 = NULL;
         iter->user_data3 = GINT_TO_POINTER(0);
         iter->stamp = model->stamp;
@@ -1148,8 +1171,16 @@ gnc_tree_model_account_iter_nth_child (GtkTreeModel *tree_model,
             LEAVE("bad root index");
             return FALSE;
         }
-
-        iter->user_data = model->root;
+        /* We don't have control of the GtkTreeIter's eventual
+         * disposal so we can't conditionally unref user_data if it's
+         * root nor could we call g_weak_ref_clear were we to put one
+         * of those in, so we immediately unref acct and hope that the
+         * iter is used before it's destroyed.
+         */
+        Account* acct = g_weak_ref_get (&model->root);
+        if (acct)
+            g_object_unref (acct);
+        iter->user_data = acct;
         iter->user_data2 = NULL;
         iter->user_data3 = GINT_TO_POINTER(0);
         iter->stamp = model->stamp;
@@ -1279,7 +1310,7 @@ gnc_tree_model_account_get_iter_from_account (GncTreeModelAccount *model,
     iter->user_data = account;
     iter->stamp = model->stamp;
 
-    if (account == model->root)
+    if (g_weak_ref_eq (&model->root, account))
     {
         iter->user_data2 = NULL;
         iter->user_data3 = GINT_TO_POINTER(0);
@@ -1287,7 +1318,7 @@ gnc_tree_model_account_get_iter_from_account (GncTreeModelAccount *model,
         return TRUE;
     }
 
-    if (model->root != gnc_account_get_root (account))
+    if (!g_weak_ref_eq (&model->root, gnc_account_get_root (account)))
     {
         LEAVE("Root doesn't match");
         return FALSE;
@@ -1432,7 +1463,7 @@ gnc_tree_model_account_event_handler (QofInstance *entity,
         LEAVE("not in this book");
         return;
     }
-    if (gnc_account_get_root (account) != model->root)
+    if (!g_weak_ref_eq (&model->root, gnc_account_get_root (account)))
     {
         LEAVE("not in this model");
         return;
@@ -1462,10 +1493,12 @@ gnc_tree_model_account_event_handler (QofInstance *entity,
     case QOF_EVENT_REMOVE:
         if (!ed) /* Required for a remove. */
             break;
-        parent = ed->node ? GNC_ACCOUNT(ed->node) : model->root;
+        parent = ed->node ? GNC_ACCOUNT(ed->node) : g_weak_ref_get (&model->root);
         parent_name = ed->node ? xaccAccountGetName (parent) : "Root";
         DEBUG("remove child %d of account %p (%s)", ed->idx, parent, parent_name);
         path = gnc_tree_model_account_get_path_from_account (model, parent);
+        if (!ed->node)
+            g_object_unref (parent);
         if (!path)
         {
             DEBUG("can't generate path");
